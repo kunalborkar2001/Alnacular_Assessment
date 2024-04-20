@@ -29,7 +29,7 @@ const DataTable = () => {
             field: 'actions',
             headerName: 'Actions',
             width: 150,
-    
+
             renderCell: (params) => (
                 <div className='flex items-center justify-center h-full gap-2'>
                     <BasicModal
@@ -42,6 +42,7 @@ const DataTable = () => {
                         city={params.row.city}
                         state={params.row.state}
                         country={params.row.country}
+                        addData={handleUpdate}
                     />
                     <Button variant="contained" color="secondary" sx={{ bgcolor: "red", margin: "8px" }} size="small" onClick={() => handleDelete(params.row.id)}>Delete</Button>
                 </div>
@@ -80,6 +81,27 @@ const DataTable = () => {
         setInitalRows(initialRows.filter((elem) => elem.id != id))
     };
 
+    function handleAddOne(data) {
+        let add = { id: 90, ...data }
+        setInitalRows((prevState) => [...prevState, add])
+    }
+
+    function handleUpdate(data, id) {
+        console.log("update" , data, id);
+        setInitalRows(prevRows => {
+            // Find the index of the row to be updated
+            const index = prevRows.findIndex(row => row.id === id);
+            if (index !== -1) {
+                // Create a copy of the row with updated data
+                const updatedRow = { ...prevRows[index], ...data };
+                // Create a new array with the updated row
+                const updatedRows = [...prevRows.slice(0, index), updatedRow, ...prevRows.slice(index + 1)];
+                return updatedRows;
+            }
+            return prevRows;
+        });
+    }
+
 
     return (
         <div>
@@ -104,18 +126,17 @@ const DataTable = () => {
                 </Box>
             </Modal>
 
-
             <div style={{ height: 400, width: '100%' }}>
                 <DataGrid
                     rows={initialRows}
                     columns={columns}
                     pageSize={5}
-                    pagination={{ pageSizeOptions: [5,10,20,] }}
+                    pagination={{ pageSizeOptions: [5, 10, 20,] }}
                     sx={{ padding: "12px" }}
                 />
             </div>
 
-            <BasicModal type="Add" />
+            <BasicModal type="Add" addData={handleAddOne} />
         </div>
     );
 };

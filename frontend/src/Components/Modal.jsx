@@ -17,7 +17,7 @@ const style = {
     p: 4,
 };
 
-export default function BasicModal({ type, name, email, phone, tags, id, city, state, country }) {
+export default function BasicModal({ type, name, email, phone, tags, id, city, state, country, addData }) {
     const [open, setOpen] = React.useState(false);
     const [formData, setFormData] = React.useState({
         name: '',
@@ -76,8 +76,16 @@ export default function BasicModal({ type, name, email, phone, tags, id, city, s
 
     const handleSubmit = (event) => {
         event.preventDefault();
+        console.log("type" , type);
         // Handle form submission here
         console.log('Form submitted with data:', formData);
+        if(type  == "Add") {
+            addData(formData)
+        }
+        else if (type == "Edit") {
+            console.log("I am Id" , id);
+            addData(formData, id)
+        }
         handleClose(); // Close the modal after form submission
     };
 
