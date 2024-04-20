@@ -14,7 +14,7 @@ const contactRoutes = require('./routes/contact.route');
 app.use('/contacts', contactRoutes);
 
 // MongoDB Connection
-mongoose.connect('mongodb+srv://kunalborkar2001:pveoINdiVlZx2wEm@kunalsmongo.5raphyd.mongodb.net/alnacular')
+mongoose.connect(process.env.MONGODB_URL)
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.error('MongoDB connection error:', err));
 
