@@ -18,6 +18,7 @@ const style = {
 };
 
 export default function BasicModal({ type, name, email, phone, tags, id, city, state, country, addData }) {
+
     const [open, setOpen] = React.useState(false);
     const [formData, setFormData] = React.useState({
         name: '',
@@ -40,6 +41,12 @@ export default function BasicModal({ type, name, email, phone, tags, id, city, s
                 ...prevData,
                 [name]: tags,
             }));
+        } else if (name === 'phone') {
+            // Ensure phone number is stored as a string
+            setFormData((prevData) => ({
+                ...prevData,
+                [name]: String(value),
+            }));
         } else {
             setFormData((prevData) => ({
                 ...prevData,
@@ -49,7 +56,7 @@ export default function BasicModal({ type, name, email, phone, tags, id, city, s
     };
 
     React.useEffect(() => {
-        
+
         if (type == "Edit") {
             setFormData({
                 name: name,
@@ -58,32 +65,32 @@ export default function BasicModal({ type, name, email, phone, tags, id, city, s
                 tags: tags,
                 city: city,
                 state: state,
-                country: country
+                country: country,
+                _id : id
             })
         }
         else if (type == "Add") {
             setFormData({
                 name: '',
-                email: null,
+                email: '',
                 phone: '',
                 tags: [],
                 city: '',
                 state: '',
-                country: ''
+                country: '',
             })
         }
     }, [])
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        console.log("type" , type);
+
         // Handle form submission here
-        console.log('Form submitted with data:', formData);
-        if(type  == "Add") {
+        if (type == "Add") {
             addData(formData)
+            console.log('Form submitted with data:', formData);
         }
         else if (type == "Edit") {
-            console.log("I am Id" , id);
             addData(formData, id)
         }
         handleClose(); // Close the modal after form submission

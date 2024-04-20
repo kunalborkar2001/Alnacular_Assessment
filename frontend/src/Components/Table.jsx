@@ -3,7 +3,8 @@ import { DataGrid } from '@mui/x-data-grid';
 import { Button, Modal, Box, Typography } from '@mui/material';
 import * as XLSX from 'xlsx';
 import BasicModal from './Modal';
-import { currentRows } from '../../../mockData/data'
+import { getAllContacts, addContact, deleteContact, editContact, bulkAdd } from '../Apis/api';
+import SearchBar from './SearchBar';
 
 
 
@@ -11,15 +12,36 @@ import { currentRows } from '../../../mockData/data'
 
 const DataTable = () => {
     const [open, setOpen] = React.useState(false);
-    const [initialRows, setInitalRows] = React.useState(currentRows)
+    const [initialRows, setInitialRows] = React.useState([]);
+    const [searchValue, setSearchValue] = React.useState('')
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
+    const fetchData = async () => {
+        try {
+            const response = await getAllContacts();
+            let filteredRows = response.data;
+            if (searchValue.trim() !== '') {
+                filteredRows = response.data.filter(row =>
+                    row.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+                    row.tags.some(tag => tag.toLowerCase().includes(searchValue.toLowerCase()))
+                );
+            }
+            setInitialRows(filteredRows);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchData();
+    }, []);
+
     const columns = [
-        { field: 'id', headerName: 'ID' },
-        { field: 'name', headerName: 'Name', },
-        { field: 'email', headerName: 'Last name', width: 300 },
+        { field: '_id', headerName: 'ID' },
+        { field: 'name', headerName: 'Name' },
+        { field: 'email', headerName: 'Email', width: 300 },
         { field: 'phone', headerName: 'Phone', type: 'number' },
         { field: 'tags', headerName: 'Tags', description: 'This column has a value getter and is not sortable.', width: 200 },
         { field: 'city', headerName: 'City' },
@@ -29,12 +51,11 @@ const DataTable = () => {
             field: 'actions',
             headerName: 'Actions',
             width: 150,
-
             renderCell: (params) => (
                 <div className='flex items-center justify-center h-full gap-2'>
                     <BasicModal
                         type="Edit"
-                        id={params.row.id}
+                        id={params.row._id}
                         name={params.row.name}
                         email={params.row.email}
                         phone={params.row.phone}
@@ -44,7 +65,7 @@ const DataTable = () => {
                         country={params.row.country}
                         addData={handleUpdate}
                     />
-                    <Button variant="contained" color="secondary" sx={{ bgcolor: "red", margin: "8px" }} size="small" onClick={() => handleDelete(params.row.id)}>Delete</Button>
+                    <Button variant="contained" color="secondary" sx={{ bgcolor: "red", margin: "8px" }} size="small" onClick={() => handleDelete(params.row._id)}>Delete</Button>
                 </div>
             ),
         },
@@ -53,58 +74,120 @@ const DataTable = () => {
     const handleFileUpload = (event) => {
         const file = event.target.files[0];
         const reader = new FileReader();
-        reader.onload = (e) => {
+
+        // Wrap the reader.onload in a Promise
+        const onLoadPromise = new Promise((resolve, reject) => {
+            reader.onload = (e) => {
+                resolve(e);
+            };
+            reader.onerror = (err) => {
+                reject(err);
+            };
+        });
+
+        reader.readAsArrayBuffer(file);
+
+        onLoadPromise.then(async (e) => {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
-            const excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            // Assuming the first row contains headers
-            const headers = excelData[0];
-            const rows = excelData.slice(1).map((row) => {
-                const rowData = {};
-                headers.forEach((header, index) => {
-                    rowData[columns[index].field] = row[index];
-                });
-                return rowData;
-            });
-            // Concatenate the new rows with the existing rows
-            setInitalRows((prevRows) => [...prevRows, ...rows]);
-            handleClose();
-        };
-        reader.readAsArrayBuffer(file);
-    };
+            const excelData = XLSX.utils.sheet_to_json(worksheet);
 
-    function handleDelete(id) {
-        // Implement your delete logic here
-        console.log(`Delete row with id ${id}`);
-        setInitalRows(initialRows.filter((elem) => elem.id != id))
-    };
+            const rows = excelData.map((row, index) => ({
+                // _id: index + 1,
+                name: row.Name,
+                email: row.Email,
+                phone: row.Phone,
+                tags: row.Tags,
+                city: row.City,
+                state: row.State,
+                country: row.Country,
+            }));
 
-    function handleAddOne(data) {
-        let add = { id: 90, ...data }
-        setInitalRows((prevState) => [...prevState, add])
-    }
-
-    function handleUpdate(data, id) {
-        console.log("update" , data, id);
-        setInitalRows(prevRows => {
-            // Find the index of the row to be updated
-            const index = prevRows.findIndex(row => row.id === id);
-            if (index !== -1) {
-                // Create a copy of the row with updated data
-                const updatedRow = { ...prevRows[index], ...data };
-                // Create a new array with the updated row
-                const updatedRows = [...prevRows.slice(0, index), updatedRow, ...prevRows.slice(index + 1)];
-                return updatedRows;
+            try {
+                let response = await bulkAdd(rows)
+                if (response.status == '201') {
+                    setInitialRows((prevRows) => [...prevRows, ...response.data]);
+                }
+                else {
+                    throw new Error("Unable to Bulk Add. Please check the data");
+                }
+            } catch (error) {
+                console.log(error);
             }
-            return prevRows;
+            finally {
+                handleClose();
+            }
+        }).catch((err) => {
+            console.error("File reading error:", err);
         });
-    }
+    };
+
+    const handleDelete = async (id) => {
+        //Handle Delete here
+
+        try {
+            let response = await deleteContact(id)
+            if (response.status == '204') {
+                setInitialRows((prevRows) => prevRows.filter((row) => row._id !== id));
+            }
+            else {
+                throw new Error("Unable to delete")
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const handleAddOne = async (data) => {
+        //Handle Add here
+        try {
+            let response = await addContact(data)
+            if (response.status == '201') {
+                setInitialRows((prevRows) => [...prevRows, response.data]);
+            }
+            else {
+                throw new Error("Data Adding Failed")
+            }
+        } catch (error) {
+            console.log(error);
+        }
+
+    };
+
+    const handleUpdate = async (data, id) => {
+
+        //Handling updates here
+        try {
+            let response = await editContact(data, id)
+            if (response.status == '200') {
+                setInitialRows((prevRows) =>
+                    prevRows.map((row) => (row._id === id ? { ...row, ...data } : row))
+                );
+            }
+            else {
+                throw new Error("Unable to Update")
+            }
+        } catch (error) {
+            console.log(error);
+        }
+
+    };
+
+
+    const handleSearch = async (e) => {
+        setSearchValue(e.target.value);
+        fetchData(); // Trigger search
+    };
+
 
 
     return (
         <div>
+            <div className='w-full flex justify-center'>
+                <SearchBar searchValue={searchValue} handleSearch={handleSearch} />
+            </div>
             <Button variant="contained" color="primary" onClick={handleOpen}>Bulk Upload</Button>
 
             <Modal open={open} onClose={handleClose} sx={{ display: "flex", border: "solid green 10px", alignItems: "center", justifyContent: "center" }}>
@@ -131,8 +214,9 @@ const DataTable = () => {
                     rows={initialRows}
                     columns={columns}
                     pageSize={5}
-                    pagination={{ pageSizeOptions: [5, 10, 20,] }}
+                    pagination={{ pageSizeOptions: [5, 10, 20] }}
                     sx={{ padding: "12px" }}
+                    getRowId={(row) => row._id}
                 />
             </div>
 

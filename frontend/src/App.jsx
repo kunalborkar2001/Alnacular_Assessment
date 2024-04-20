@@ -12,7 +12,6 @@ function App() {
       <h1 className="w-full flex items-center justify-center h-screen">
         <div>
         <DataTable />
-
         </div>
       </h1>
     </>
