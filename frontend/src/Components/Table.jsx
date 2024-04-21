@@ -103,7 +103,7 @@ const DataTable = () => {
                 // _id: index + 1,
                 name: row.Name,
                 email: row.Email,
-                phone: row.Phone && row.Phone.startsWith('+91') ? row.Phone.slice(3) : row.Phone, 
+                phone: row.Phone && row.Phone.startsWith('+91') ? row.Phone.slice(3) : row.Phone,
                 tags: row.Tags,
                 city: row.City,
                 state: row.State,
@@ -121,7 +121,7 @@ const DataTable = () => {
             });
 
             if (validRows.length === 0) {
-                console.error("No valid data found in the Excel file.");
+                console.error("Name or Phone is invalid for these data", invalidNames);
                 handleClose();
                 return;
             }
