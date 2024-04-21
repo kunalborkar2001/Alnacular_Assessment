@@ -74,6 +74,8 @@ const DataTable = () => {
         },
     ];
 
+    const phoneRegex = /^91[0-9]{10}$/;
+
     const handleFileUpload = (event) => {
         const file = event.target.files[0];
         const reader = new FileReader();
@@ -101,7 +103,7 @@ const DataTable = () => {
                 // _id: index + 1,
                 name: row.Name,
                 email: row.Email,
-                phone: row.Phone,
+                phone: row.Phone && row.Phone.startsWith('+91') ? row.Phone.slice(3) : row.Phone, 
                 tags: row.Tags,
                 city: row.City,
                 state: row.State,
@@ -111,7 +113,7 @@ const DataTable = () => {
             // Collect names of invalid rows
             const invalidNames = [];
             const validRows = rows.filter(row => {
-                if (!row.name || !row.phone) {
+                if (!row.name || !row.phone || !phoneRegex.test(row.phone)) {
                     invalidNames.push(row.name || "");
                     return false;
                 }
@@ -119,14 +121,14 @@ const DataTable = () => {
             });
 
             if (validRows.length === 0) {
-                console.error("These names dont have either name or phone please add", invalidNames);
+                console.error("No valid data found in the Excel file.");
                 handleClose();
                 return;
             }
 
             try {
-                let response = await bulkAdd(rows)
-                if (response.status == '201') {
+                let response = await bulkAdd(validRows)
+                if (response.status === '201') {
                     setInitialRows((prevRows) => [...prevRows, ...response.data]);
                 }
                 else {
@@ -137,6 +139,11 @@ const DataTable = () => {
             }
             finally {
                 handleClose();
+            }
+
+            // Log names of invalid rows
+            if (invalidNames.length > 0) {
+                console.error("Invalid rows found with the following names:", invalidNames);
             }
         }).catch((err) => {
             console.error("File reading error:", err);
