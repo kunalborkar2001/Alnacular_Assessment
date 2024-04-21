@@ -109,25 +109,9 @@ const DataTable = () => {
                 country: row.Country,
             }));
 
-            // Collect names of invalid rows
-            const invalidNames = [];
-            const validRows = rows.filter(row => {
-                if (!row.name || !row.phone) {
-                    invalidNames.push(row.name || "");
-                    return false;
-                }
-                return true;
-            });
-
-            if (validRows.length === 0) {
-                console.error("Name or Phone is invalid for these data", invalidNames);
-                handleClose();
-                return;
-            }
-
             try {
-                let response = await bulkAdd(validRows)
-                if (response.status === '201') {
+                let response = await bulkAdd(rows)
+                if (response.status == '201') {
                     setInitialRows((prevRows) => [...prevRows, ...response.data]);
                 }
                 else {
@@ -138,11 +122,6 @@ const DataTable = () => {
             }
             finally {
                 handleClose();
-            }
-
-            // Log names of invalid rows
-            if (invalidNames.length > 0) {
-                console.error("Invalid rows found with the following names:", invalidNames);
             }
         }).catch((err) => {
             console.error("File reading error:", err);
