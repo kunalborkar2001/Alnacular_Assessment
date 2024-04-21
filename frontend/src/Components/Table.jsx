@@ -5,21 +5,21 @@ import * as XLSX from 'xlsx';
 import BasicModal from './Modal';
 import { getAllContacts, addContact, deleteContact, editContact, bulkAdd } from '../Apis/api';
 import SearchBar from './SearchBar';
-
-
-
+import CircularProgress from '@mui/material/CircularProgress';
+import LinearProgress from '@mui/material/LinearProgress';
 
 
 const DataTable = () => {
     const [open, setOpen] = React.useState(false);
     const [initialRows, setInitialRows] = React.useState([]);
     const [searchValue, setSearchValue] = React.useState('')
-
+    const [loadData, setLoadData] = React.useState(false)
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
     const fetchData = async () => {
         try {
+            setLoadData(true)
             const response = await getAllContacts();
             let filteredRows = response.data;
             if (searchValue.trim() !== '') {
@@ -31,6 +31,9 @@ const DataTable = () => {
             setInitialRows(filteredRows);
         } catch (error) {
             console.log(error);
+        }
+        finally {
+            setLoadData(false)
         }
     };
 
@@ -184,44 +187,59 @@ const DataTable = () => {
 
 
     return (
-        <div>
-            <div className='w-full flex justify-center'>
-                <SearchBar searchValue={searchValue} handleSearch={handleSearch} />
-            </div>
-            <Button variant="contained" color="primary" onClick={handleOpen}>Bulk Upload</Button>
-
-            <Modal open={open} onClose={handleClose} sx={{ display: "flex", border: "solid green 10px", alignItems: "center", justifyContent: "center" }}>
-                <Box sx={{
-                    width: 500,
-                    height: 200,
-                    bgcolor: 'background.paper',
-                    border: '2px solid #000',
-                    p: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}>
+        <>
+            {loadData ? (
+                <div className='text-center flex flex-col '>
                     <div>
-                        <Typography variant="h5">Bulk Upload</Typography>
-                        <input type="file" onChange={handleFileUpload} accept=".xlsx,.xls" />
-                        <Typography variant="body1">Upload format: Excel (.xlsx, .xls)</Typography>
+                        <LinearProgress color="success" />
                     </div>
-                </Box>
-            </Modal>
+                    <div>
+                        The Backend is Hosted on free server it might take upto 30s to load for 1st time
+                    </div>
+                </div>
+            )
+                :
+                (<div>
+                    <div className='w-full flex justify-center'>
+                        <SearchBar searchValue={searchValue} handleSearch={handleSearch} />
+                    </div>
+                    <Button variant="contained" color="primary" onClick={handleOpen}>Bulk Upload</Button>
 
-            <div style={{ height: 400, width: '100%' }}>
-                <DataGrid
-                    rows={initialRows}
-                    columns={columns}
-                    pageSize={5}
-                    pagination={{ pageSizeOptions: [5, 10, 20] }}
-                    sx={{ padding: "12px" }}
-                    getRowId={(row) => row._id}
-                />
-            </div>
+                    <Modal open={open} onClose={handleClose} sx={{ display: "flex", border: "solid green 10px", alignItems: "center", justifyContent: "center" }}>
+                        <Box sx={{
+                            width: 500,
+                            height: 200,
+                            bgcolor: 'background.paper',
+                            border: '2px solid #000',
+                            p: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}>
+                            <div>
+                                <Typography variant="h5">Bulk Upload</Typography>
+                                <input type="file" onChange={handleFileUpload} accept=".xlsx,.xls" />
+                                <Typography variant="body1">Upload format: Excel (.xlsx, .xls)</Typography>
+                            </div>
+                        </Box>
+                    </Modal>
 
-            <BasicModal type="Add" addData={handleAddOne} />
-        </div>
+                    <div style={{ height: 400, width: '100%' }}>
+                        <DataGrid
+                            rows={initialRows}
+                            columns={columns}
+                            pageSize={5}
+                            pagination={{ pageSizeOptions: [5, 10, 20] }}
+                            sx={{ padding: "12px" }}
+                            getRowId={(row) => row._id}
+                        />
+                    </div>
+
+
+                    <BasicModal type="Add" addData={handleAddOne} />
+                </div>)
+            }
+        </>
     );
 };
 
