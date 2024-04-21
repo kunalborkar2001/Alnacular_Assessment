@@ -74,7 +74,6 @@ const DataTable = () => {
         },
     ];
 
-    const phoneRegex = /^91[0-9]{10}$/;
 
     const handleFileUpload = (event) => {
         const file = event.target.files[0];
@@ -103,7 +102,7 @@ const DataTable = () => {
                 // _id: index + 1,
                 name: row.Name,
                 email: row.Email,
-                phone: row.Phone, 
+                phone: row.Phone,
                 tags: row.Tags,
                 city: row.City,
                 state: row.State,
@@ -113,7 +112,7 @@ const DataTable = () => {
             // Collect names of invalid rows
             const invalidNames = [];
             const validRows = rows.filter(row => {
-                if (!row.name || !row.phone || !phoneRegex.test(row.phone)) {
+                if (!row.name || !row.phone) {
                     invalidNames.push(row.name || "");
                     return false;
                 }
