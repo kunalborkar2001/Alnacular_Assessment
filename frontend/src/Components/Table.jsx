@@ -108,6 +108,22 @@ const DataTable = () => {
                 country: row.Country,
             }));
 
+            // Collect names of invalid rows
+            const invalidNames = [];
+            const validRows = rows.filter(row => {
+                if (!row.name || !row.phone) {
+                    invalidNames.push(row.name || "");
+                    return false;
+                }
+                return true;
+            });
+
+            if (validRows.length === 0) {
+                console.error("These names dont have either name or phone please add", invalidNames);
+                handleClose();
+                return;
+            }
+
             try {
                 let response = await bulkAdd(rows)
                 if (response.status == '201') {
