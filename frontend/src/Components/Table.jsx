@@ -145,7 +145,20 @@ const DataTable = () => {
     };
 
     const handleAddOne = async (data) => {
+        console.log(data);
         //Handle Add here
+        if(!data.email) {
+            data.email = "unset"
+        }
+         if(!data.city) {
+            data.city = 'unset'
+        }
+         if(!data.state) {
+            data.state = 'unset'
+        }
+       if (!data.country) {
+            data.country = 'unset'
+        }
         try {
             let response = await addContact(data)
             if (response.status == '201') {
