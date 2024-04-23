@@ -7,6 +7,7 @@ import { getAllContacts, addContact, deleteContact, editContact, bulkAdd } from 
 import SearchBar from './SearchBar';
 import CircularProgress from '@mui/material/CircularProgress';
 import LinearProgress from '@mui/material/LinearProgress';
+import BulkModal from './BulkModel';
 
 
 const DataTable = () => {
@@ -14,6 +15,11 @@ const DataTable = () => {
     const [initialRows, setInitialRows] = React.useState([]);
     const [searchValue, setSearchValue] = React.useState('')
     const [loadData, setLoadData] = React.useState(false)
+
+    const [bulkRows, setBulkRows] = React.useState([])
+    const [invalidData, setInvalidData] = React.useState([])
+    const [bulkModelOpen, setBulkModelOpen] = React.useState(false)
+
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
@@ -109,13 +115,59 @@ const DataTable = () => {
                 country: row.Country,
             }));
 
-            try {
-                let response = await bulkAdd(rows)
-                if (response.status == '201') {
-                    setInitialRows((prevRows) => [...prevRows, ...response.data]);
+
+            rows.forEach((elem, idx) => {
+                if (!elem.name && !elem.phone) {
+                    setInvalidData((prevData) => [...prevData,
+                    {
+                        rowNumber: idx + 1,
+                        name: "Please add Name",
+                        phone: "Please Add Phone",
+                        email: elem.email,
+                        tags: elem.tags,
+                        city: elem.city,
+                        state: elem.state,
+                        country: elem.country
+                    }])
                 }
-                else {
-                    throw new Error("Unable to Bulk Add. Please check the data");
+                else if (!elem.name) {
+                    setInvalidData((prevData) => [...prevData,
+                    {
+                        rowNumber: idx + 1,
+                        name: "Please add Name",
+                        phone: elem.phone,
+                        email: elem.email,
+                        tags: elem.tags,
+                        city: elem.city,
+                        state: elem.state,
+                        country: elem.country
+                    }])
+                }
+                else if (!elem.phone) {
+                    setInvalidData((prevData) => [...prevData,
+                    {
+                        rowNumber: idx + 1,
+                        phone: "Please add Phone",
+                        name: elem.name,
+                        email: elem.email,
+                        tags: elem.tags,
+                        city: elem.city,
+                        state: elem.state,
+                        country: elem.country
+                    }])
+                }
+            })
+            setBulkRows(rows.filter((elem) => elem.name && elem.phone))
+            if (invalidData) setBulkModelOpen(true)
+            try {
+                if (!invalidData) {
+                    let response = await bulkAdd(rows)
+                    if (response.status == '201') {
+                        setInitialRows((prevRows) => [...prevRows, ...response.data]);
+                    }
+                    else {
+                        throw new Error("Unable to Bulk Add. Please check the data");
+                    }
                 }
             } catch (error) {
                 console.log(error);
@@ -125,7 +177,8 @@ const DataTable = () => {
             }
         }).catch((err) => {
             console.error("File reading error:", err);
-        });
+        }
+        );
     };
 
     const handleDelete = async (id) => {
@@ -145,18 +198,17 @@ const DataTable = () => {
     };
 
     const handleAddOne = async (data) => {
-        console.log(data);
         //Handle Add here
-        if(!data.email) {
+        if (!data.email) {
             data.email = "unset"
         }
-         if(!data.city) {
+        if (!data.city) {
             data.city = 'unset'
         }
-         if(!data.state) {
+        if (!data.state) {
             data.state = 'unset'
         }
-       if (!data.country) {
+        if (!data.country) {
             data.country = 'unset'
         }
         try {
@@ -198,6 +250,23 @@ const DataTable = () => {
         fetchData(); // Trigger search
     };
 
+    const handleBulkSubmit = async (validData) => {
+        try {
+
+            let response = await bulkAdd([...validData, ...bulkRows])
+            if (response.status == '201') {
+                setInitialRows((prevRows) => [...prevRows, ...response.data]);
+                setInvalidData([])
+                setBulkRows([])
+            }
+            else {
+                throw new Error("Unable to Bulk Add. Please check the data");
+            }
+
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
 
     return (
@@ -251,6 +320,7 @@ const DataTable = () => {
 
 
                 <BasicModal type="Add" addData={handleAddOne} />
+                <BulkModal isOpen={bulkModelOpen} invalidData={invalidData} bulkSubmit={handleBulkSubmit} />
             </div>
 
         </>
