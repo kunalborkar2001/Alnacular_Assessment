@@ -34,10 +34,12 @@ const DataTable = () => {
                     row.tags.some(tag => tag.toLowerCase().includes(searchValue.toLowerCase()))
                 );
             }
-            if(searchValue.trim() == ''){
-                setInvalidData(response.data)
+            if (searchValue.trim() == '') {
+                setInitialRows(response.data)
             }
-            setInitialRows(filteredRows);
+            
+                setInitialRows(filteredRows);
+            
         } catch (error) {
             console.log(error);
         }
@@ -262,8 +264,6 @@ const DataTable = () => {
                 phone: typeof data.phone === 'string' ? parseInt(data.phone) : data.phone
             }));
 
-            console.log("ValidData: ", formattedValidData);
-            console.log("BulkData: ", bulkRows);
             let response = await bulkAdd([...formattedValidData, ...bulkRows]);
             if (response.status == '201') {
                 setInitialRows((prevRows) => [...prevRows, ...response.data]);
@@ -277,7 +277,11 @@ const DataTable = () => {
         }
     };
 
-
+    const handleBulkClose = () => {
+        console.log("yooo");
+        setInvalidData([]);
+        setBulkRows([]);
+    }
 
 
     return (
@@ -331,7 +335,7 @@ const DataTable = () => {
 
 
                 <BasicModal type="Add" addData={handleAddOne} />
-                <BulkModal isOpen={bulkModelOpen} invalidData={invalidData} bulkSubmit={handleBulkSubmit} />
+                <BulkModal isOpen={bulkModelOpen} invalidData={invalidData} bulkSubmit={handleBulkSubmit} handleBulkClose={handleBulkClose} />
             </div>
 
         </>

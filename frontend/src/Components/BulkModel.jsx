@@ -16,7 +16,7 @@ const style = {
     p: 4,
 };
 
-export default function BulkModal({ invalidData, isOpen, bulkSubmit }) {
+export default function BulkModal({ invalidData, isOpen, bulkSubmit, handleBulkClose }) {
 
     const [errorData, setErrorData] = React.useState([])
 
@@ -32,6 +32,7 @@ export default function BulkModal({ invalidData, isOpen, bulkSubmit }) {
     }, [invalidData])
 
     const handleClose = () => {
+        handleBulkClose()
         setOpen(false);
     };
     const handleChange = (event, rowNumber) => {
