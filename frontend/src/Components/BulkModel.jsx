@@ -125,7 +125,7 @@ export default function BulkModal({ invalidData, isOpen, bulkSubmit }) {
                                 </div>
                             ))}
                             <div className='flex justify-center'>
-                                <Button className='w-full text-end' type='submit' >Save</Button>
+                                <Button className='w-full text-end' type='submit' variant='success' >Retry</Button>
                                 <Button className='w-full text-end' onClick={handleClose} >Cancel</Button>
                             </div>
                         </form>
