@@ -11,7 +11,11 @@ router.get('/search', contactController.searchContacts);
 
 router.post('/', validate(contactValidation.addSingle), contactController.addContact);
 
-router.post('/bulk-upload',  contactController.addContacts);
+router.post('/bulk-upload', (req, res, next) => {
+    // Log the request body data before validation
+    console.log("Request Body Data (Before Validation):", req.body);
+    next();
+}, validate(contactValidation.bulkUpload), contactController.addContacts);
 
 router.patch('/:id', contactController.updateContact);
 

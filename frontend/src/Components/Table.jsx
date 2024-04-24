@@ -109,7 +109,7 @@ const DataTable = () => {
                 name: row.Name,
                 email: row.Email,
                 phone: row.Phone,
-                tags: row.Tags,
+                tags: row.Tags.split(','),
                 city: row.City,
                 state: row.State,
                 country: row.Country,
@@ -158,7 +158,7 @@ const DataTable = () => {
                 }
             })
             setBulkRows(rows.filter((elem) => elem.name && elem.phone))
-            
+
             if (invalidData) setBulkModelOpen(true)
             try {
                 if (!invalidData) {
@@ -253,21 +253,28 @@ const DataTable = () => {
 
     const handleBulkSubmit = async (validData) => {
         try {
+            // Remove 'rowNumber' property and convert 'phone' property to number where applicable
+            const formattedValidData = validData.map(({ rowNumber, ...data }) => ({
+                ...data,
+                phone: typeof data.phone === 'string' ? parseInt(data.phone) : data.phone
+            }));
 
-            let response = await bulkAdd([...validData, ...bulkRows])
+            console.log("ValidData: ", formattedValidData);
+            console.log("BulkData: ", bulkRows);
+            let response = await bulkAdd([...formattedValidData, ...bulkRows]);
             if (response.status == '201') {
                 setInitialRows((prevRows) => [...prevRows, ...response.data]);
-                setInvalidData([])
-                setBulkRows([])
-            }
-            else {
+                setInvalidData([]);
+                setBulkRows([]);
+            } else {
                 throw new Error("Unable to Bulk Add. Please check the data");
             }
-
         } catch (error) {
             console.log(error);
         }
-    }
+    };
+
+
 
 
     return (
