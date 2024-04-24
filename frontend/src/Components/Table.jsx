@@ -34,6 +34,9 @@ const DataTable = () => {
                     row.tags.some(tag => tag.toLowerCase().includes(searchValue.toLowerCase()))
                 );
             }
+            if(searchValue.trim() == ''){
+                setInvalidData(response.data)
+            }
             setInitialRows(filteredRows);
         } catch (error) {
             console.log(error);
