@@ -1,43 +1,42 @@
 const Joi = require("joi");
 const httpStatus = require("http-status");
-const pick = require("../utils/pick");
 const ApiError = require("../utils/ApiError");
 
-
 const validate = (schema) => (req, res, next) => {
-  // Request body should be JSON, if present
-  if (Object.keys(req.body).length !== 0 && !req.is("application/json")) {
-    return next(
-      new ApiError(
-        httpStatus.UNSUPPORTED_MEDIA_TYPE,
-        "Supports JSON request body only"
-      )
-    );
-  }
+    // Request body should be JSON, if present
+    if (Object.keys(req.body).length !== 0 && !req.is("application/json")) {
+        return next(
+            new ApiError(
+                httpStatus.UNSUPPORTED_MEDIA_TYPE,
+                "Supports JSON request body only"
+            )
+        );
+    }
 
-  // cherry-pick from the input schema ["params", "query", "body"] fields
-  const validSchema = pick(schema, ["params", "query", "body"]);
+    const object = { body: req.body }; // Wrap req.body in a 'body' object
 
-  // cherry-pick from the request object ["params", "query", "body"] fields
-  const object = pick(req, Object.keys(validSchema));
+    
+    // Define custom Joi schema to allow single object or array of objects
+    const customSchema = Joi.object({
+        body: Joi.alternatives().try(
+            schema.body,
+            Joi.array().items(schema.body)
+        ).required()
+    });
 
-  // Compile schema to Joi schema object and validate the request object
-  const { value, error } = Joi.compile(validSchema)
-    .prefs({ errors: { label: "key" } })
-    .validate(object);
+    const { value, error } = customSchema
+        .prefs({ errors: { label: "key" } })
+        .validate(object);
 
-  // If validation fails throw 400 Bad Request error
-  if (error) {
-    const errorMessage = error.details
-      .map((details) => details.message)
-      .join(", ");
-    return next(new ApiError(httpStatus.BAD_REQUEST, errorMessage));
-  }
+    if (error) {
+        const errorMessage = error.details.map((details) => details.message).join(", ");
+        return next(new ApiError(httpStatus.BAD_REQUEST, errorMessage));
+    }
 
-  // Update validated fields in request with returned value
-  Object.assign(req, value);
+    // Extract validated body array or object and assign it to req.body
+    req.body = value.body;
 
-  return next();
+    return next();
 };
 
 module.exports = validate;

@@ -89,7 +89,7 @@ export default function BulkModal({ invalidData, isOpen, bulkSubmit }) {
             >
                 <Box sx={style}>
                     <Typography id="modal-modal-title" variant="h6" component="h2">
-                        Fix This Invaild Data
+                        {invalidData.length ? "Fix This Invaild Data" : "No Invalid data found"}
                     </Typography>
                     <Typography id="modal-modal-description" sx={{ mt: 2 }}>
                         <form onSubmit={handleSubmit}>
@@ -125,7 +125,9 @@ export default function BulkModal({ invalidData, isOpen, bulkSubmit }) {
                                 </div>
                             ))}
                             <div className='flex justify-center'>
-                                <Button className='w-full text-end' type='submit' variant='success' >Retry</Button>
+                                <Button className='w-full text-end' type='submit' variant='success' >
+                                    {invalidData.length ? "Retry" : "Proceed"}
+                                </Button>
                                 <Button className='w-full text-end' onClick={handleClose} >Cancel</Button>
                             </div>
                         </form>

@@ -158,6 +158,7 @@ const DataTable = () => {
                 }
             })
             setBulkRows(rows.filter((elem) => elem.name && elem.phone))
+            
             if (invalidData) setBulkModelOpen(true)
             try {
                 if (!invalidData) {
