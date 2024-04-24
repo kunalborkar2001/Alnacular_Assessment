@@ -278,9 +278,7 @@ const DataTable = () => {
     };
 
     const handleBulkClose = () => {
-        console.log("yooo");
-        setInvalidData([]);
-        setBulkRows([]);
+        window.location.reload();
     }
 
 
