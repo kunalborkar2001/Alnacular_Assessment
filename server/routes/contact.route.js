@@ -11,7 +11,7 @@ router.get('/search', contactController.searchContacts);
 
 router.post('/', validate(contactValidation.addSingle), contactController.addContact);
 
-router.post('/bulk-upload', validate(contactValidation.bulkUpload),  contactController.addContacts);
+router.post('/bulk-upload',  contactController.addContacts);
 
 router.patch('/:id', contactController.updateContact);
 
